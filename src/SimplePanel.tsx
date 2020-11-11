@@ -1,68 +1,127 @@
-import React from 'react';
-import { PanelProps } from '@grafana/data';
+import React, { PureComponent } from 'react';
+import { Field, fieldReducers, formattedValueToString, getFieldDisplayName, PanelProps, ReducerID } from '@grafana/data';
 import { SimpleOptions } from 'types';
-import { css, cx } from 'emotion';
-import { stylesFactory, useTheme } from '@grafana/ui';
+import { css } from 'emotion';
+import { stylesFactory } from '@grafana/ui';
 
 interface Props extends PanelProps<SimpleOptions> {}
+interface State {
+  rpm: number;
+  field?: Field;
+}
 
-export const SimplePanel: React.FC<Props> = ({ options, data, width, height }) => {
-  const theme = useTheme();
-  const styles = getStyles();
-  return (
-    <div
-      className={cx(
-        styles.wrapper,
-        css`
-          width: ${width}px;
-          height: ${height}px;
-        `
-      )}
-    >
-      <svg
-        className={styles.svg}
-        width={width}
-        height={height}
-        xmlns="http://www.w3.org/2000/svg"
-        xmlnsXlink="http://www.w3.org/1999/xlink"
-        viewBox={`-${width / 2} -${height / 2} ${width} ${height}`}
-      >
+export class SimplePanel extends PureComponent<Props, State> {
+  style = getStyles();
+  state: State = {
+    rpm: 0,
+  };
+
+  componentDidUpdate() {
+    this.updateRPM();
+  }
+
+  componentDidMount() {
+    this.updateRPM();
+  }
+
+  updateRPM() {
+    const { options, data } = this.props;
+    for (const frame of data.series) {
+      for (const field of frame.fields) {
+        const name = getFieldDisplayName(field, frame, data.series);
+        if (name === options.rpmField) {
+          const v = fieldReducers.get(ReducerID.lastNotNull).reduce!(field, true, false)[ReducerID.lastNotNull];
+          this.setState({ rpm: v, field });
+        }
+      }
+    }
+  }
+
+  renderSVG() {
+    const { width, height } = this.props;
+    const { rpm } = this.state;
+
+    const animation = `spin ${rpm > 0 ? 60 / rpm : 0}s linear infinite`;
+
+    return (
+      <svg width={width - 5} height={height - 5} viewBox="0 0 189.326 283.989" style={{ background: 'transparent' }}>
+        <symbol id="blade">
+          <path
+            fill="#e6e6e6"
+            id="blade-front"
+            d="M14.6491879,1.85011601 C14.2684455,-0.0535962877 10.7150812,-0.815081206 9.06473318,3.37308585 L0.434338747,70.7658933 L8.93805104,91.9607889 L15.4106729,90.437819 L17.5684455,78.3807425 L14.5218097,1.97679814 L14.6491879,1.85011601 Z"
+          />
+          <path
+            fill="#d0d6d7"
+            id="blade-side"
+            d="M11.0951276,0.581206497 C10.3336427,0.961948956 9.57215777,1.85011601 8.93735499,3.24640371 L0.306960557,70.6392111 L8.81067285,91.8341067 L3.35359629,70.0044084 L11.0951276,0.581206497 Z"
+          />
+        </symbol>
+
         <g>
-          <circle style={{ fill: `${theme.isLight ? theme.palette.greenBase : theme.palette.blue95}` }} r={100} />
+          <g id="structure" transform="translate(58.123, 82.664)" fillRule="nonzero">
+            <polygon id="tower" fill="#e6e6e6" points="33.111,10.984 39.965,10.984 44.28,196.176 28.796,196.176" />
+            <path
+              id="yaw"
+              fill="rgba(0,0,0,0.25)"
+              d="M40.3454756,23.2948956 L40.7262181,34.8445476 C38.8225058,35.0986079 35.7765661,35.0986079 32.349884,34.337123 L32.7306265,23.2955916 L40.3454756,23.2955916 L40.3454756,23.2948956 Z"
+            />
+            <path
+              id="base"
+              fill="#d0d6d7"
+              transform="translate(0 42)"
+              d="M26.3846868,150.591647 L46.5640371,150.591647 C48.8484919,150.591647 50.7522042,152.49536 50.7522042,154.779814 L50.7522042,158.967981 L22.0691415,158.967981 L22.0691415,154.779814 C22.0691415,152.49536 23.9728538,150.591647 26.2573086,150.591647 L26.3846868,150.591647 Z"
+            />
+            <circle id="nacelle" fill="#e6e6e6" cx="36.54" cy="12" r="11.93" />
+            <circle id="gearbox" fill="none" stroke="#d0d6d7" strokeWidth="2.75" cx="36.538" cy="11.999" r="5.8" />
+          </g>
+          <g className={this.style.blade} style={{ animation }}>
+            <use id="blade1" href="#blade" x="83.24" y="0" />
+            <use id="blade2" href="#blade" x="83.24" y="0" transform="rotate(120 94.663 94.663)" />
+            <use id="blade3" href="#blade" x="83.24" y="0" transform="rotate(-120 94.663 94.663)" />
+          </g>
         </g>
       </svg>
+    );
+  }
 
-      <div className={styles.textBox}>
-        {options.showSeriesCount && (
-          <div
-            className={css`
-              font-size: ${theme.typography.size[options.seriesCountSize]};
-            `}
-          >
-            Number of series: {data.series.length}
-          </div>
-        )}
-        <div>Text option value: {options.text}</div>
+  render() {
+    const { width, height } = this.props;
+    const { rpm, field } = this.state;
+    return (
+      <div style={{width,height}} className={this.style.wrap}>
+        {field && <div className={this.style.rpmText}>{formattedValueToString( field.display!(rpm) )}</div>}
+        {this.renderSVG()}
       </div>
-    </div>
-  );
-};
+    );
+  }
+}
 
-const getStyles = stylesFactory(() => {
+export const getStyles = stylesFactory(() => {
   return {
-    wrapper: css`
-      position: relative;
+    wrap: css`
+    position: relative;
     `,
-    svg: css`
-      position: absolute;
-      top: 0;
-      left: 0;
+    rpmText: css`
+      position:absolute;
+      bottom: 5px;
+      right:5px;
     `,
-    textBox: css`
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      padding: 10px;
+    blade: css`
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      width: 258.63px;
+      height: 258.63px;
+      transform-origin: 94.663px 94.663px;
+      animation: spin 0s linear infinite;
+      transform: rotate(15deg);
     `,
   };
 });

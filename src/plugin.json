@@ -1,10 +1,10 @@
 {
   "type": "panel",
-  "name": "Grafana Panel Plugin Template",
-  "id": "myorgid-simple-panel",
+  "name": "Wind Turbine",
+  "id": "ryantxu-wind-panel",
 
   "info": {
-    "description": "Grafana Panel Plugin Template",
+    "description": "Wind Turbine",
     "author": {
       "name": "Your Name"
     },

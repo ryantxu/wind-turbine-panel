@@ -1,5 +1,5 @@
 {
-  "name": "simple-react-panel",
+  "name": "ryantxu-wind-panel",
   "version": "1.0.0",
   "description": "Grafana Panel Plugin Template",
   "scripts": {
@@ -8,7 +8,6 @@
     "dev": "grafana-toolkit plugin:dev",
     "watch": "grafana-toolkit plugin:dev --watch"
   },
-  "repository": "github:grafana/simple-react-panel",
   "author": "Grafana Labs <team@grafana.com> (https://grafana.com)",
   "license": "Apache-2.0",
   "bugs": {
@@ -16,9 +15,10 @@
     "email": "plugins@grafana.com"
   },
   "devDependencies": {
-    "@grafana/data": "^7.0.0",
-    "@grafana/toolkit": "^7.0.0",
-    "@grafana/ui": "^7.0.0",
+    "@grafana/data": "latest",
+    "@grafana/toolkit": "latest",
+    "@grafana/ui": "latest",
+    "@grafana/runtime": "latest",
     "emotion": "10.0.27"
   },
   "engines": {

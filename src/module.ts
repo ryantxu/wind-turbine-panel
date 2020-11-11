@@ -1,40 +1,43 @@
-import { PanelPlugin } from '@grafana/data';
+import { FieldOverrideContext, FieldType, getFieldDisplayName, PanelPlugin } from '@grafana/data';
 import { SimpleOptions } from './types';
 import { SimplePanel } from './SimplePanel';
 
 export const plugin = new PanelPlugin<SimpleOptions>(SimplePanel).setPanelOptions(builder => {
-  return builder
-    .addTextInput({
-      path: 'text',
-      name: 'Simple text option',
-      description: 'Description of panel option',
-      defaultValue: 'Default value of text input option',
-    })
-    .addBooleanSwitch({
-      path: 'showSeriesCount',
-      name: 'Show series counter',
-      defaultValue: false,
-    })
-    .addRadio({
-      path: 'seriesCountSize',
-      defaultValue: 'sm',
-      name: 'Series counter size',
-      settings: {
-        options: [
-          {
-            value: 'sm',
-            label: 'Small',
-          },
-          {
-            value: 'md',
-            label: 'Medium',
-          },
-          {
-            value: 'lg',
-            label: 'Large',
-          },
-        ],
-      },
-      showIf: config => config.showSeriesCount,
-    });
+  return (
+    builder
+      // .addTextInput({
+      //   path: 'text',
+      //   name: 'Simple text option',
+      //   description: 'Description of panel option',
+      //   defaultValue: 'Default value of text input option',
+      // })
+      .addSelect({
+        path: 'rpmField',
+        name: 'RPM Field',
+        settings: {
+          options: [],
+          getOptions: getFieldNamesPicker,
+        },
+      })
+  );
+  // .addSelect({
+  //   path: 'color',
+  //   name: 'Color field',
+  //   settings: {
+  //     options: [],
+  //     getOptions: getFieldNamesPicker,
+  //   },
+  //});
 });
+
+function getFieldNamesPicker(ctx: FieldOverrideContext) {
+  const names: string[] = [];
+  for (const frame of ctx.data) {
+    for (const field of frame.fields) {
+      if (field.type === FieldType.number) {
+        names.push(getFieldDisplayName(field, frame, ctx.data));
+      }
+    }
+  }
+  return Promise.resolve(names.map(v => ({ label: v, value: v })));
+}
